@@ -2,355 +2,162 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
   <title>Partition Piano</title>
   <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@0.9.5/build/opensheetmusicdisplay.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      background: #1a1a2e;
-      color: #eee;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    header {
-      background: #16213e;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    }
-    
-    h1 {
-      font-size: 1.1rem;
-      color: #e2b96f;
-      flex: 1;
-    }
-    
-    select, button {
-      background: #0f3460;
-      color: #fff;
-      border: 1px solid #e2b96f;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      -webkit-appearance: none;
-    }
-    
-    button:active { background: #e2b96f; color: #1a1a2e; }
-    
-    .controls {
-      background: #16213e;
-      padding: 10px 16px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-      border-bottom: 1px solid #0f3460;
-    }
-    
-    .controls label {
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-    
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100px;
-      height: 4px;
-      background: #0f3460;
-      border-radius: 2px;
-      outline: none;
-    }
-    
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      background: #e2b96f;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    
-    #score-container {
-      flex: 1;
-      overflow: auto;
-      padding: 20px;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    #osmd-container {
-      width: 100%;
-      min-height: 500px;
-    }
-    
-    #loading {
-      text-align: center;
-      padding: 40px;
-      color: #888;
-      font-size: 1.2rem;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #0f3460;
-      border-top: 4px solid #e2b96f;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .toggle-btn {
-      padding: 6px 10px;
-      font-size: 0.75rem;
-    }
-    
-    .toggle-btn.active {
-      background: #e2b96f;
-      color: #1a1a2e;
-    }
-    
-    #cursor-info {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #16213e;
-      border: 1px solid #e2b96f;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      color: #e2b96f;
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 200;
-    }
-    
-    #cursor-info.show { opacity: 1; }
-    
-    /* OSMD cursor highlight color */
-    .osmd-note-highlight { fill: #e2b96f !important; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; color: #eee; font-family: -apple-system, sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #16213e; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #0f3460; }
+    h1 { font-size: 1rem; color: #e2b96f; flex: 1; }
+    select, button { background: #0f3460; color: #fff; border: 1px solid #e2b96f; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer; }
+    button.b-active { background: #e2b96f; color: #1a1a2e; }
+    #toolbar { background: #16213e; padding: 8px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #0f3460; }
+    .toolbar-label { font-size: 0.75rem; color: #888; }
+    input[type=range] { width: 80px; }
+    #score { flex: 1; overflow: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+    #loading { text-align: center; padding: 30px; color: #888; }
+    #loading.hidden { display: none; }
+    #cursor-btn.b-active { background: #e2b96f; color: #1a1a2e; }
+    #auto-btn.b-active { background: #e2b96f; color: #1a1a2e; }
   </style>
 </head>
 <body>
-
 <header>
-  <h1 id="title">🎹 Partition Piano</h1>
+  <h1 id="score-title">Partition Piano</h1>
   <select id="piece-select" onchange="loadPiece(this.value)">
-    <option value="">— Choisir une partition —</option>
-    <option value="fur_elise">Beethoven — Für Elise</option>
-    <option value="sonatina_clementi">Clementi — Sonatine Op.36 No.1</option>
-    <option value="mozart_sonata16">Mozart — Sonate K.545 (1er mvt)</option>
+    <option value="">— Choisir —</option>
+    <option value="fur">Beethoven — F&#252;r Elise</option>
+    <option value="sonatina">Clementi — Sonatine Op.36</option>
+    <option value="mozart">Mozart — Sonate K.545</option>
   </select>
 </header>
-
-<div class="controls">
-  <button class="toggle-btn" onclick="toggleAutoScroll()" id="auto-scroll-btn">Auto-scroll</button>
-  
-  <label>Zoom</label>
-  <input type="range" id="zoom-slider" min="30" max="200" value="80" oninput="setZoom(this.value)">
-  
-  <label>Taille notes</label>
-  <input type="range" id="note-size" min="50" max="200" value="100" oninput="setNoteSize(this.value)">
-  
-  <label>Transposition</label>
-  <input type="range" id="transpose" min="-6" max="6" value="0" oninput="setTranspose(this.value)">
-  
-  <button class="toggle-btn" onclick="toggleFollowCursor()" id="cursor-btn">Curseur</button>
-  
-  <button onclick="resetView()">↺ Reset</button>
+<div id="toolbar">
+  <button id="auto-btn" onclick="toggleAutoScroll()">Auto-scroll</button>
+  <span class="toolbar-label">Zoom</span><input type="range" id="zoom" min="30" max="200" value="70" oninput="applyZoom()">
+  <span class="toolbar-label">Notes</span><input type="range" id="noteSize" min="50" max="200" value="100" oninput="applyNoteSize()">
+  <span class="toolbar-label">Transp.</span><input type="range" id="transpose" min="-6" max="6" value="0" oninput="applyTranspose()">
+  <button id="cursor-btn" onclick="toggleFollowCursor()">Curseur</button>
 </div>
-
-<div id="score-container">
-  <div id="loading">
-    <div class="spinner"></div>
-    Chargement...
-  </div>
-  <div id="osmd-container"></div>
+<div id="score">
+  <div id="loading">Chargement...</div>
+  <div id="osmd"></div>
 </div>
-
-<div id="cursor-info" id="cursor-info">-mesure</div>
-
 <script>
-  window.osmdInstance = null;
-  let autoScrollInterval = null;
-  let cursorFollow = false;
-  let scrollPos = 0;
-  let autoScrollEnabled = false;
-  
-  const pieces = {
-    fur_elise: {
-      title: 'Beethoven — Für Elise',
-      url: '/fur_elise.musicxml'
-    },
-    sonatina_clementi: {
-      title: 'Clementi — Sonatine Op.36 No.1',
-      url: '/sonatina_clementi.musicxml'
-    },
-    mozart_sonata16: {
-      title: 'Mozart — Sonate K.545 (1er mvt)',
-      url: '/mozart_sonata16.musicxml'
-    }
-  };
+var osmd = null;
+var autoScrollTimer = null;
+var cursorTimer = null;
+var followCursor = false;
+var autoScrollOn = false;
 
-  async function loadPiece(key) {
-    if (!key) return;
-    const piece = pieces[key];
-    document.getElementById('title').textContent = '🎹 ' + piece.title;
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('osmd-container').innerHTML = '';
-    
-    if (!window.osmdInstance) {
-      window.osmdInstance = new opensheetmusicdisplay.OpenSheetMusicDisplay('#osmd-container', {
-        autoResize: true,
-        backendType: 'svg',
-        drawTitle: true,
-        drawComposer: true,
-        drawMetronome: false,
-        drawPartNames: false,
-        drawMeasureNumbers: true,
-        drawMeasureNumbersOnlyAtSystemStart: false,
-        coloring: {
-          enable: true,
-          mode: 3,
-          customColorSettings: {
-            highlight: '#e2b96f',
-            Cursor: '#e2b96f'
+const pieces = {
+  fur: { title: 'Beethoven — F&#252;r Elise', url: '/fur_elise.musicxml' },
+  sonatina: { title: 'Clementi — Sonatine Op.36 No.1', url: '/sonatina_clementi.musicxml' },
+  mozart: { title: 'Mozart — Sonate K.545 (1er mvt)', url: '/mozart_sonata16.musicxml' }
+};
+
+function loadPiece(key) {
+  if (!key || !pieces[key]) return;
+  var piece = pieces[key];
+  document.getElementById('score-title').textContent = piece.title;
+  var loading = document.getElementById('loading');
+  loading.style.display = 'block';
+  loading.textContent = 'Chargement de ' + piece.title + '...';
+
+  if (osmd === null) {
+    osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(document.getElementById('osmd'));
+    osmd.setOptions({ autoResize: true, drawTitle: true, drawComposer: true, drawMeasureNumbers: true });
+  }
+
+  fetch(piece.url)
+    .then(function(resp) { if (!resp.ok) throw new Error('HTTP ' + resp.status); return resp.text(); })
+    .then(function(xml) {
+      return osmd.load(xml);
+    })
+    .then(function() {
+      osmd.render();
+      applyZoom();
+      osmd.cursor.show();
+      osmd.cursor.setColor('#e2b96f');
+      loading.style.display = 'none';
+    })
+    .catch(function(err) {
+      loading.textContent = 'Erreur: ' + err.message;
+      console.error(err);
+    });
+}
+
+function applyZoom() {
+  if (!osmd) return;
+  var val = parseInt(document.getElementById('zoom').value);
+  osmd.setOptions({ zoom: val / 100 });
+  osmd.render();
+}
+
+function applyNoteSize() {
+  if (!osmd) return;
+  var val = parseInt(document.getElementById('noteSize').value);
+  osmd.setOptions({ defaultFontSize: val });
+  osmd.render();
+}
+
+function applyTranspose() {
+  if (!osmd) return;
+  var val = parseInt(document.getElementById('transpose').value);
+  osmd.setOptions({ transposition: val });
+  osmd.render();
+}
+
+function toggleAutoScroll() {
+  autoScrollOn = !autoScrollOn;
+  var btn = document.getElementById('auto-btn');
+  if (autoScrollOn) {
+    btn.classList.add('b-active');
+    if (osmd && osmd.cursor) {
+      autoScrollTimer = setInterval(function() {
+        osmd.cursor.next();
+        var el = osmd.cursor.graphic;
+        if (el) {
+          var score = document.getElementById('score');
+          var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+          if (rect && rect.top < 100) {
+            score.scrollTop += 2;
           }
         }
-      });
+      }, 2500);
     }
-    
-    try {
-      const resp = await fetch(piece.url);
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const xml = await resp.text();
-      await window.osmdInstance.load(xml);
-      window.osmdInstance.render();
-      
-      // Apply current zoom
-      setZoom(document.getElementById('zoom-slider').value);
-      
-      // Cursor
-      window.osmdInstance?.cursor?.show();
-      window.osmdInstance?.cursor?.setColor('#e2b96f');
-      
-      // Follow cursor callback
-      window.osmdInstance?.cursor?.next();
-      
-      document.getElementById('loading').style.display = 'none';
-      
-    } catch(e) {
-      document.getElementById('loading').innerHTML = '<p style="color:#e74c3c">Erreur: ' + e.message + '</p>';
-    }
+  } else {
+    btn.classList.remove('b-active');
+    clearInterval(autoScrollTimer);
   }
-  
-  function setZoom(val) {
-    if (!osmd) return;
-    const zoom = val / 100;
-    window.osmdInstance?.setOptions({ zoom: zoom });
-    window.osmdInstance?.render();
-  }
-  
-  function setNoteSize(val) {
-    if (!osmd) return;
-    window.osmdInstance?.setOptions({ defaultFontSize: val });
-    window.osmdInstance?.render();
-  }
-  
-  function setTranspose(val) {
-    if (!osmd) return;
-    window.osmdInstance?.setOptions({ transposition: parseInt(val) });
-    window.osmdInstance?.render();
-  }
-  
-  function toggleAutoScroll() {
-    autoScrollEnabled = !autoScrollEnabled;
-    const btn = document.getElementById('auto-scroll-btn');
-    btn.classList.toggle('active', autoScrollEnabled);
-    
-    if (autoScrollEnabled) {
-      const container = document.getElementById('score-container');
-      autoScrollInterval = setInterval(() => {
-        scrollPos += 1;
-        container.scrollTop = scrollPos;
-      }, 50);
-    } else {
-      clearInterval(autoScrollInterval);
-    }
-  }
-  
-  function toggleFollowCursor() {
-    cursorFollow = !cursorFollow;
-    const btn = document.getElementById('cursor-btn');
-    btn.classList.toggle('active', cursorFollow);
-    
-    if (!osmd) return;
-    
-    if (cursorFollow) {
-      window.osmdInstance?.cursor?.next();
-      
-      const info = document.getElementById('cursor-info');
-      const container = document.getElementById('score-container');
-      
-      setInterval(() => {
-        if (!osmd.cursor) return;
-        window.osmdInstance?.cursor?.next();
-        
-        // Get current measure
-        const el = osmd.cursor.graphic;
-        if (el && container) {
-          container.scrollTop = 0; // cursor position tracking 
-            el.parentElement.offsetTop - 200 : 0;
-          
-          const measure = osmd.cursor.measureNumber || '';
-          info.textContent = 'Mesure ' + measure;
-          info.classList.add('show');
-          setTimeout(() => info.classList.remove('show'), 2000);
+}
+
+function toggleFollowCursor() {
+  followCursor = !followCursor;
+  var btn = document.getElementById('cursor-btn');
+  if (followCursor) {
+    btn.classList.add('b-active');
+    if (osmd && osmd.cursor) {
+      cursorTimer = setInterval(function() {
+        osmd.cursor.next();
+        var el = osmd.cursor.graphic;
+        if (el) {
+          var score = document.getElementById('score');
+          var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+          if (rect) {
+            var containerTop = score.getBoundingClientRect().top;
+            if (rect.top < containerTop + 80) {
+              score.scrollTop += rect.top - containerTop - 80;
+            }
+          }
         }
       }, 2000);
     }
+  } else {
+    btn.classList.remove('b-active');
+    clearInterval(cursorTimer);
   }
-  
-  function resetView() {
-    const container = document.getElementById('score-container');
-    container.scrollTop = 0;
-    scrollPos = 0;
-    document.getElementById('zoom-slider').value = 80;
-    document.getElementById('note-size').value = 100;
-    if (osmd) {
-      setZoom(80);
-      window.osmdInstance?.cursor?.reset();
-    }
-  }
-  
-  // Touch/pan support
-  const container = document.getElementById('score-container');
-  let touchStartY = 0;
-  
-  container.addEventListener('touchstart', e => {
-    touchStartY = e.touches[0].clientY;
-  }, {passive: true});
-  
-  container.addEventListener('touchmove', e => {
-    const delta = touchStartY - e.touches[0].clientY;
-    scrollPos = container.scrollTop + delta;
-    touchStartY = e.touches[0].clientY;
-  }, {passive: true});
+}
 </script>
-
 </body>
 </html>
