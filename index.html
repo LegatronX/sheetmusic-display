@@ -235,7 +235,10 @@
     }
     
     try {
-      await osmd.load(piece.url);
+        const resp = await fetch(piece.url);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const xml = await resp.text();
+        await window.osmdInstance.load(xml);
       window.osmdInstance?.render();
       
       // Apply current zoom
