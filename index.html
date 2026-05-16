@@ -40,7 +40,7 @@
   <button id="cursor-btn" onclick="toggleFollowCursor()">Curseur</button>
 </div>
 <div id="score">
-  <div id="loading">Chargement...</div>
+  <div id="loading" class="hidden">Chargement...</div>
   <div id="osmd"></div>
 </div>
 <script>
@@ -78,8 +78,7 @@ function loadPiece(key) {
       osmd.render();
       applyZoom();
       osmd.cursor.show();
-      osmd.cursor.setColor('#e2b96f');
-      loading.style.display = 'none';
+      loading.style.display = 'none'; loading.classList.add('hidden');
     })
     .catch(function(err) {
       loading.textContent = 'Erreur: ' + err.message;
