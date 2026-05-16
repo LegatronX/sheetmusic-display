@@ -225,7 +225,7 @@
         drawMeasureNumbersOnlyAtSystemStart: false,
         coloring: {
           enable: true,
-          mode: opensheetmusicdisplay.OSMD.ColorMode.Custom,
+          mode: 3,
           customColorSettings: {
             highlight: '#e2b96f',
             Cursor: '#e2b96f'
@@ -235,11 +235,11 @@
     }
     
     try {
-        const resp = await fetch(piece.url);
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-        const xml = await resp.text();
-        await window.osmdInstance.load(xml);
-      window.osmdInstance?.render();
+      const resp = await fetch(piece.url);
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const xml = await resp.text();
+      await window.osmdInstance.load(xml);
+      window.osmdInstance.render();
       
       // Apply current zoom
       setZoom(document.getElementById('zoom-slider').value);
