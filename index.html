@@ -185,7 +185,7 @@
 <div id="cursor-info" id="cursor-info">-mesure</div>
 
 <script>
-  let osmd = null;
+  window.osmdInstance = null;
   let autoScrollInterval = null;
   let cursorFollow = false;
   let scrollPos = 0;
@@ -194,15 +194,15 @@
   const pieces = {
     fur_elise: {
       title: 'Beethoven — Für Elise',
-      url: 'https://raw.githubusercontent.com/LegatronX/sheetmusic-display/main/fur_elise.musicxml'
+      url: '/fur_elise.musicxml'
     },
     sonatina_clementi: {
       title: 'Clementi — Sonatine Op.36 No.1',
-      url: 'https://raw.githubusercontent.com/LegatronX/sheetmusic-display/main/sonatina_clementi.musicxml'
+      url: '/sonatina_clementi.musicxml'
     },
     mozart_sonata16: {
       title: 'Mozart — Sonate K.545 (1er mvt)',
-      url: 'https://raw.githubusercontent.com/LegatronX/sheetmusic-display/main/mozart_sonata16.musicxml'
+      url: '/mozart_sonata16.musicxml'
     }
   };
 
@@ -213,8 +213,8 @@
     document.getElementById('loading').style.display = 'block';
     document.getElementById('osmd-container').innerHTML = '';
     
-    if (!osmd) {
-      osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay('#osmd-container', {
+    if (!window.osmdInstance) {
+      window.osmdInstance = new opensheetmusicdisplay.OpenSheetMusicDisplay('#osmd-container', {
         autoResize: true,
         backendType: 'svg',
         drawTitle: true,
@@ -236,17 +236,17 @@
     
     try {
       await osmd.load(piece.url);
-      osmd.render();
+      window.osmdInstance?.render();
       
       // Apply current zoom
       setZoom(document.getElementById('zoom-slider').value);
       
       // Cursor
-      osmd.cursor.show();
-      osmd.cursor.setColor('#e2b96f');
+      window.osmdInstance?.cursor?.show();
+      window.osmdInstance?.cursor?.setColor('#e2b96f');
       
       // Follow cursor callback
-      osmd.cursor.next();
+      window.osmdInstance?.cursor?.next();
       
       document.getElementById('loading').style.display = 'none';
       
@@ -258,20 +258,20 @@
   function setZoom(val) {
     if (!osmd) return;
     const zoom = val / 100;
-    osmd.setOptions({ zoom: zoom });
-    osmd.render();
+    window.osmdInstance?.setOptions({ zoom: zoom });
+    window.osmdInstance?.render();
   }
   
   function setNoteSize(val) {
     if (!osmd) return;
-    osmd.setOptions({ defaultFontSize: val });
-    osmd.render();
+    window.osmdInstance?.setOptions({ defaultFontSize: val });
+    window.osmdInstance?.render();
   }
   
   function setTranspose(val) {
     if (!osmd) return;
-    osmd.setOptions({ transposition: parseInt(val) });
-    osmd.render();
+    window.osmdInstance?.setOptions({ transposition: parseInt(val) });
+    window.osmdInstance?.render();
   }
   
   function toggleAutoScroll() {
@@ -298,19 +298,19 @@
     if (!osmd) return;
     
     if (cursorFollow) {
-      osmd.cursor.next();
+      window.osmdInstance?.cursor?.next();
       
       const info = document.getElementById('cursor-info');
       const container = document.getElementById('score-container');
       
       setInterval(() => {
         if (!osmd.cursor) return;
-        osmd.cursor.next();
+        window.osmdInstance?.cursor?.next();
         
         // Get current measure
         const el = osmd.cursor.graphic;
         if (el && container) {
-          container.scrollTop = el.parentElement ? 
+          container.scrollTop = 0; // cursor position tracking 
             el.parentElement.offsetTop - 200 : 0;
           
           const measure = osmd.cursor.measureNumber || '';
@@ -330,7 +330,7 @@
     document.getElementById('note-size').value = 100;
     if (osmd) {
       setZoom(80);
-      osmd.cursor.reset();
+      window.osmdInstance?.cursor?.reset();
     }
   }
   
